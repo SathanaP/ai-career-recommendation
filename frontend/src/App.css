@@ -73,26 +73,6 @@ button:hover:not(:disabled) {
   background-color: #163a5f;
 }
 
-/* Skills list */
-ul {
-  list-style: none;
-  padding: 0;
-}
-
-li {
-  background-color: #dbe9f4;
-  margin: 5px 0;
-  padding: 10px 15px;
-  border-radius: 6px;
-}
-
-/* Optional: responsive adjustments */
-@media (max-width: 650px) {
-  .App {
-    padding: 30px 20px;
-    margin: 10px;
-  }
-}
 /* Spinner styles */
 .spinner {
   border: 4px solid #f3f3f3;
@@ -108,4 +88,82 @@ li {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* Result Page Box */
+.result-page {
+  max-width: 900px; /* wider box */
+  width: 90%;
+  margin: auto;
+  padding: 30px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+
+  /* vertically center the box */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Columns layout */
+.columns-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 30px;
+  flex-wrap: wrap; /* responsive wrap */
+}
+
+/* Each column */
+.column {
+  flex: 1;
+  min-width: 250px;
+  text-align: left;
+}
+
+/* Skills list vertical with colored boxes */
+.skills-container {
+  margin-top: 10px;
+}
+
+.skills-container li {
+  background-color: #dbe9f4;   /* light blue box */
+  color: #1f4e79;              /* text color */
+  margin: 5px 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Top Career Matches vertical boxes */
+.column ol {
+  margin-top: 10px;
+  padding-left: 0;
+  list-style-position: inside;
+}
+
+.column ol li {
+  background-color: #dbe9f4;  /* light blue box */
+  color: #1f4e79;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin: 5px 0;              /* vertical spacing */
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Optional: responsive adjustments */
+@media (max-width: 650px) {
+  .App {
+    padding: 30px 20px;
+    margin: 10px;
+  }
+
+  .columns-container {
+    flex-direction: column;
+    gap: 20px;
+  }
 }

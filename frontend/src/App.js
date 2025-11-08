@@ -52,29 +52,39 @@ function HomePage({ setResult }) {
 
 // Result Page Component
 function ResultPage({ result }) {
-  const navigate = useNavigate();
-
-  if (!result)
-    return (
-      <div className="App">
-        <p>No result found. Please go back and upload a resume.</p>
-        <button onClick={() => navigate("/")}>Go Back</button>
-      </div>
-    );
+  if (!result) return <p>No result found. Please go back and upload a resume.</p>;
 
   return (
-    <div className="App">
-      <h1>Recommended Career: {result.recommended_career}</h1>
-      <h3>Skills Found:</h3>
-      <ul>
-        {result.skills_found.map((skill, index) => (
-          <li key={index}>{skill}</li>
-        ))}
-      </ul>
-      <button onClick={() => navigate("/")}>Analyze Another Resume</button>
+    <div className="App result-page">
+      <h1>Career Recommendations</h1>
+      <div className="columns-container">
+        {/* Skills Column */}
+        <div className="column">
+          <h3>Matched Skills:</h3>
+          <ul className="skills-container">
+            {result.skills_found.map((skill, index) => (
+              <li key={index}>{skill}</li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Career Recommendations Column */}
+        <div className="column">
+          <h3>Top Career Matches:</h3>
+          <ol>
+            {result.recommendations.map((rec, index) => (
+              <li key={index}>
+                {rec.career} (Score: {rec.score})
+              </li>
+            ))}
+          </ol>
+        </div>
+      </div>
     </div>
   );
 }
+
+
 
 // Main App Component with Router
 function App() {

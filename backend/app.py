@@ -1,8 +1,7 @@
 from flask import Flask, request, jsonify
 import spacy
 import PyPDF2
-import os
-from flask_cors import CORS  # ✅ Add this
+from flask_cors import CORS  # ✅ Allow cross-origin requests
 
 app = Flask(__name__)
 CORS(app)  # ✅ Enable CORS for all routes
@@ -54,18 +53,24 @@ def upload_resume():
             if token.text.lower() in skills:
                 found_skills.add(token.text.lower())
 
-    # Recommend career
-    best_match = "No match found"
-    highest_score = 0
-
+    # Calculate match scores for all careers
+    scores = []
     for career, skills in career_skills.items():
         match_score = len(set(skills) & found_skills)
-        if match_score > highest_score:
-            highest_score = match_score
-            best_match = career
+        if match_score > 0:
+            scores.append((career, match_score))
+
+    # Sort and get top 3
+    scores.sort(key=lambda x: x[1], reverse=True)
+    top_3 = scores[:3]
+
+    # Prepare recommendations
+    recommendations = [
+        {"career": career, "score": score} for career, score in top_3
+    ]
 
     return jsonify({
-        "recommended_career": best_match,
+        "recommendations": recommendations,
         "skills_found": list(found_skills)
     })
 

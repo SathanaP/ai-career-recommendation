@@ -2,6 +2,11 @@ import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
 import "./App.css";
 
+// Simple Spinner Component
+function Spinner() {
+  return <div className="spinner"></div>;
+}
+
 // Home Page Component
 function HomePage({ setResult }) {
   const [file, setFile] = useState(null);
@@ -23,8 +28,8 @@ function HomePage({ setResult }) {
     try {
       const response = await fetch("http://127.0.0.1:5000/upload", { method: "POST", body: formData });
       const data = await response.json();
-      setResult(data); // Save result in parent state
-      navigate("/result"); // Navigate to Result page
+      setResult(data); // Save result
+      navigate("/result"); // Go to Result page
     } catch (error) {
       console.error("Error:", error);
       alert("Failed to connect to backend!");
@@ -39,7 +44,7 @@ function HomePage({ setResult }) {
       <p>Upload your resume (PDF) to get a career recommendation</p>
       <input type="file" accept=".pdf" onChange={handleFileChange} />
       <button onClick={handleUpload} disabled={loading}>
-        {loading ? "Analyzing..." : "Upload & Analyze"}
+        {loading ? <Spinner /> : "Upload & Analyze"}
       </button>
     </div>
   );
@@ -47,7 +52,15 @@ function HomePage({ setResult }) {
 
 // Result Page Component
 function ResultPage({ result }) {
-  if (!result) return <p>No result found. Please go back and upload a resume.</p>;
+  const navigate = useNavigate();
+
+  if (!result)
+    return (
+      <div className="App">
+        <p>No result found. Please go back and upload a resume.</p>
+        <button onClick={() => navigate("/")}>Go Back</button>
+      </div>
+    );
 
   return (
     <div className="App">
@@ -58,6 +71,7 @@ function ResultPage({ result }) {
           <li key={index}>{skill}</li>
         ))}
       </ul>
+      <button onClick={() => navigate("/")}>Analyze Another Resume</button>
     </div>
   );
 }

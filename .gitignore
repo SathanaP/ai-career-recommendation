@@ -1,0 +1,20 @@
+# ---------- FRONTEND (React) ----------
+frontend/node_modules/
+frontend/build/
+
+# ---------- BACKEND (Flask / Python) ----------
+backend/venv/
+backend/__pycache__/
+*.pyc
+*.log
+
+# ---------- ENVIRONMENT / CONFIG ----------
+.env
+
+# ---------- SYSTEM FILES ----------
+.DS_Store
+Thumbs.db
+
+# ---------- OTHER ----------
+.vscode/
+.idea/

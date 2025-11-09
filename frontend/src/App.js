@@ -1,13 +1,27 @@
+// src/App.js
 import React, { useState } from "react";
-import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useNavigate,
+} from "react-router-dom";
 import "./App.css";
+import { auth } from "./firebase";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+} from "firebase/auth";
+import Dashboard from "./Dashboard";
 
-// Simple Spinner Component
+
+/* ------------------ Spinner ------------------ */
 function Spinner() {
   return <div className="spinner"></div>;
 }
 
-// Home Page Component
+/* ------------------ Home Page ------------------ */
 function HomePage({ setResult }) {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -26,16 +40,24 @@ function HomePage({ setResult }) {
 
     setLoading(true);
     try {
-      const response = await fetch("http://127.0.0.1:5000/upload", { method: "POST", body: formData });
+      const response = await fetch("http://127.0.0.1:5000/upload", {
+        method: "POST",
+        body: formData,
+      });
       const data = await response.json();
-      setResult(data); // Save result
-      navigate("/result"); // Go to Result page
+      setResult(data);
+      navigate("/result");
     } catch (error) {
       console.error("Error:", error);
       alert("Failed to connect to backend!");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    navigate("/login");
   };
 
   return (
@@ -46,13 +68,39 @@ function HomePage({ setResult }) {
       <button onClick={handleUpload} disabled={loading}>
         {loading ? <Spinner /> : "Upload & Analyze"}
       </button>
+      <br />
+      <button onClick={handleLogout} style={{ marginTop: "20px" }}>
+        Logout
+      </button>
     </div>
   );
 }
 
-// Result Page Component
+/* ------------------ Result Page ------------------ */
+
 function ResultPage({ result }) {
-  if (!result) return <p>No result found. Please go back and upload a resume.</p>;
+  const navigate = useNavigate();
+
+  if (!result)
+    return (
+      <div className="App">
+        <p>No result found. Please go back and upload a resume.</p>
+        <button
+          onClick={() => navigate("/home")}
+          style={{
+            padding: "10px 20px",
+            marginTop: "20px",
+            backgroundColor: "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+          }}
+        >
+          ⬅ Back to Upload
+        </button>
+      </div>
+    );
 
   return (
     <div className="App result-page">
@@ -80,20 +128,149 @@ function ResultPage({ result }) {
           </ol>
         </div>
       </div>
+
+      {/* Back Button */}
+      <button
+        onClick={() => navigate("/home")}
+        style={{
+          padding: "12px 24px",
+          marginTop: "30px",
+          backgroundColor: "#007bff",
+          color: "white",
+          border: "none",
+          borderRadius: "8px",
+          cursor: "pointer",
+          fontSize: "16px",
+        }}
+      >
+        ⬅ Back to Upload
+      </button>
     </div>
   );
 }
 
+/* ------------------ Signup Page ------------------ */
+function Signup() {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      navigate("/login");
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
-// Main App Component with Router
+  return (
+    <div className="App">
+      <h1>Sign Up</h1>
+      <form onSubmit={handleSignup}>
+        <input
+          type="email"
+          placeholder="Enter your email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <br />
+        <br />
+        <input
+          type="password"
+          placeholder="Enter password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <br />
+        <br />
+        <button type="submit">Sign Up</button>
+      </form>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      <p>
+        Already have an account?{" "}
+        <span
+          style={{ color: "blue", cursor: "pointer" }}
+          onClick={() => navigate("/login")}
+        >
+          Login
+        </span>
+      </p>
+    </div>
+  );
+}
+
+/* ------------------ Login Page ------------------ */
+function Login() {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+     navigate("/dashboard");
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  return (
+    <div className="App">
+      <h1>Login</h1>
+      <form onSubmit={handleLogin}>
+        <input
+          type="email"
+          placeholder="Enter your email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <br />
+        <br />
+        <input
+          type="password"
+          placeholder="Enter password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <br />
+        <br />
+        <button type="submit">Login</button>
+      </form>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      <p>
+        Don’t have an account?{" "}
+        <span
+          style={{ color: "blue", cursor: "pointer" }}
+          onClick={() => navigate("/signup")}
+        >
+          Sign Up
+        </span>
+      </p>
+    </div>
+  );
+}
+
+/* ------------------ Main App ------------------ */
 function App() {
   const [result, setResult] = useState(null);
 
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<HomePage setResult={setResult} />} />
+        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/home" element={<HomePage setResult={setResult} />} />
         <Route path="/result" element={<ResultPage result={result} />} />
       </Routes>
     </Router>

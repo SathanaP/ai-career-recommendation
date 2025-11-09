@@ -22,6 +22,7 @@ function Spinner() {
 }
 
 /* ------------------ Home Page ------------------ */
+/* ------------------ Home Page ------------------ */
 function HomePage({ setResult }) {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -68,10 +69,37 @@ function HomePage({ setResult }) {
       <button onClick={handleUpload} disabled={loading}>
         {loading ? <Spinner /> : "Upload & Analyze"}
       </button>
-      <br />
-      <button onClick={handleLogout} style={{ marginTop: "20px" }}>
-        Logout
-      </button>
+
+      <div style={{ marginTop: "30px" }}>
+        <button
+          onClick={handleLogout}
+          style={{
+            marginRight: "10px",
+            padding: "10px 20px",
+            backgroundColor: "#dc3545",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+          }}
+        >
+          🚪 Logout
+        </button>
+
+        <button
+          onClick={() => navigate("/dashboard")}
+          style={{
+            padding: "10px 20px",
+            backgroundColor: "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+          }}
+        >
+          📊 View Dashboard
+        </button>
+      </div>
     </div>
   );
 }

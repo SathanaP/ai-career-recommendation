@@ -5,6 +5,7 @@ frontend/build/
 # ---------- BACKEND (Flask / Python) ----------
 backend/venv/
 backend/__pycache__/
+backend/serviceAccountKey.json
 *.pyc
 *.log
 

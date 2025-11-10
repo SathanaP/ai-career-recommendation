@@ -40,37 +40,36 @@ def upload_resume():
     if file.filename == "":
         return jsonify({"error": "Empty filename"}), 400
 
-    # Extract text
+    # Extract text from PDF
     text = extract_text_from_pdf(file)
 
     # NLP processing
     doc = nlp(text)
 
-    # Find skills present
+    # Find skills present in the resume
     found_skills = set()
     for token in doc:
         for career, skills in career_skills.items():
             if token.text.lower() in skills:
                 found_skills.add(token.text.lower())
 
-    # Calculate match scores for all careers
+    # Calculate matching scores for all careers
     scores = []
     for career, skills in career_skills.items():
         match_score = len(set(skills) & found_skills)
         if match_score > 0:
             scores.append((career, match_score))
 
-    # Sort and get top 3
+    # Sort and find top 3 careers
     scores.sort(key=lambda x: x[1], reverse=True)
     top_3 = scores[:3]
 
-    # Prepare recommendations
-    recommendations = [
-        {"career": career, "score": score} for career, score in top_3
-    ]
+    # ✅ Select top recommended career
+    top_career = top_3[0][0] if top_3 else "N/A"
 
+    # ✅ Return the same JSON format your frontend expects
     return jsonify({
-        "recommendations": recommendations,
+        "recommended_career": top_career,
         "skills_found": list(found_skills)
     })
 

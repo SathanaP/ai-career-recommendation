@@ -7,9 +7,10 @@ import { useNavigate } from "react-router-dom";
 export default function Dashboard() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [totalXP, setTotalXP] = useState(0);
+  const [level, setLevel] = useState(1);
   const navigate = useNavigate();
 
-  // ✅ Fetch user analysis history
   useEffect(() => {
     const fetchHistory = async () => {
       const user = auth.currentUser;
@@ -22,17 +23,30 @@ export default function Dashboard() {
         const userRef = doc(db, "users", user.uid);
         const historyRef = collection(userRef, "history");
         const snapshot = await getDocs(historyRef);
-        const data = snapshot.docs.map((docSnap) => ({
+        let data = snapshot.docs.map((docSnap) => ({
           id: docSnap.id,
           ...docSnap.data(),
         }));
 
         // Sort by timestamp (latest first)
-        const sortedData = data.sort(
-          (a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0)
-        );
+        data.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
 
-        setHistory(sortedData);
+        // 🧹 Remove duplicates (career + skills + XP)
+        const uniqueHistory = data.filter((entry, index, self) => {
+          return index === self.findIndex((e) =>
+            e.recommendedCareer === entry.recommendedCareer &&
+            JSON.stringify((e.skills || []).sort()) === JSON.stringify((entry.skills || []).sort()) &&
+            e.xp === entry.xp
+          );
+        });
+
+        // 🧮 Calculate Total XP and Level
+        const total = uniqueHistory.reduce((sum, item) => sum + (item.xp || 0), 0);
+        const userLevel = Math.floor(total / 100) + 1;
+
+        setHistory(uniqueHistory);
+        setTotalXP(total);
+        setLevel(userLevel);
       } catch (error) {
         console.error("Error fetching history:", error);
       } finally {
@@ -43,7 +57,6 @@ export default function Dashboard() {
     fetchHistory();
   }, [navigate]);
 
-  // ✅ Logout handler
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -53,7 +66,6 @@ export default function Dashboard() {
     }
   };
 
-  // ✅ Delete a history record
   const handleDelete = async (itemId) => {
     try {
       const user = auth.currentUser;
@@ -80,7 +92,23 @@ export default function Dashboard() {
       <h2 style={{ color: "#007bff", marginBottom: "10px" }}>User Dashboard</h2>
       <p style={{ color: "#555" }}>Welcome, {auth.currentUser?.email}</p>
 
-      {/* Action Buttons */}
+      <div
+        style={{
+          background: "#fff",
+          borderRadius: "10px",
+          padding: "10px",
+          marginBottom: "20px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+        }}
+      >
+        <p style={{ fontSize: "18px", color: "#333" }}>
+          🔥 <strong>Total XP:</strong> {totalXP}
+        </p>
+        <p style={{ fontSize: "18px", color: "#333" }}>
+          🏆 <strong>Level:</strong> {level}
+        </p>
+      </div>
+
       <div style={{ margin: "25px 0" }}>
         <button
           onClick={() => navigate("/home")}
@@ -94,7 +122,7 @@ export default function Dashboard() {
             marginRight: "10px",
           }}
         >
-          📄 Upload 
+          📄 Upload
         </button>
 
         <button
@@ -112,9 +140,7 @@ export default function Dashboard() {
         </button>
       </div>
 
-      <h3 style={{ color: "#333", marginBottom: "15px" }}>
-        Your Analysis History
-      </h3>
+      <h3 style={{ color: "#333", marginBottom: "15px" }}>Your Analysis History</h3>
 
       <div style={{ textAlign: "left" }}>
         {loading ? (
@@ -131,33 +157,22 @@ export default function Dashboard() {
                 borderRadius: "10px",
                 marginBottom: "15px",
                 boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
-                transition: "transform 0.2s, box-shadow 0.2s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "scale(1.02)";
-                e.currentTarget.style.boxShadow =
-                  "0 6px 14px rgba(0,0,0,0.1)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "scale(1)";
-                e.currentTarget.style.boxShadow =
-                  "0 4px 10px rgba(0,0,0,0.05)";
               }}
             >
               <h3 style={{ color: "#007bff", marginBottom: "10px" }}>
-                {item.recommendedCareer || "No Career Found"}
+                🧭 {item.recommendedCareer || "No Career Found"}
               </h3>
               <p style={{ margin: "5px 0" }}>
                 <strong>Skills:</strong>{" "}
                 {item.skills?.join(", ") || "Not available"}
               </p>
+              <p style={{ margin: "5px 0" }}>🔥 XP: {item.xp || 0}</p>
               <p style={{ margin: "5px 0", color: "#555" }}>
-                <strong>Date:</strong>{" "}
+                🕒{" "}
                 {item.timestamp?.seconds
                   ? new Date(item.timestamp.seconds * 1000).toLocaleString()
                   : "Unknown"}
               </p>
-
               <button
                 onClick={() => handleDelete(item.id)}
                 style={{

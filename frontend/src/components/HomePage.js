@@ -12,48 +12,67 @@ export default function HomePage({ setResult }) {
 
   const handleFileChange = (e) => setFile(e.target.files[0]);
 
-  const handleUpload = async () => {
-    if (!file) {
-      alert("Please upload a resume PDF file!");
-      return;
-    }
+ const handleUpload = async () => {
+  if (!file) {
+    alert("Please upload a resume PDF file!");
+    return;
+  }
 
-    const formData = new FormData();
-    formData.append("file", file);
+  if (!file.name.endsWith(".pdf")) {
+    alert("Please upload a PDF file only!");
+    return;
+  }
 
-    setLoading(true);
-    try {
-      const response = await fetch("http://127.0.0.1:5000/upload", {
-        method: "POST",
-        body: formData,
+  const user = auth.currentUser;
+  if (!user) {
+    alert("Please log in before uploading.");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("user_id", user.uid);
+
+  setLoading(true);
+  try {
+    const response = await fetch("http://127.0.0.1:5000/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) throw new Error("Backend not responding!");
+
+    const data = await response.json();
+    setResult(data);
+
+    // ⚡ Only save to Firestore if XP earned > 0 (not duplicate)
+    if (data.xp_earned > 0) {
+      const userRef = doc(db, "users", user.uid);
+      await addDoc(collection(userRef, "history"), {
+        recommendedCareer: data.recommended_career || "N/A",
+        skills: data.skills_found || [],
+        xp: data.xp_earned || 0,
+        level: data.level || 1,
+        badges: data.badges || [],
+        timestamp: serverTimestamp(),
       });
-
-      if (!response.ok) {
-        throw new Error("Backend not responding properly!");
-      }
-
-      const data = await response.json();
-      setResult(data);
-      navigate("/result");
-
-      // ✅ Save result to Firestore (user-specific history)
-      const user = auth.currentUser;
-      if (user) {
-        const userRef = doc(db, "users", user.uid);
-        await addDoc(collection(userRef, "history"), {
-          recommendedCareer: data.recommended_career, 
-          skills: data.skills_found || [],
-          timestamp: serverTimestamp(),
-        });
-        console.log("✅ Analysis saved to Firestore!");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Failed to connect to backend. Please check if Flask server is running.");
-    } finally {
-      setLoading(false);
+      console.log("✅ Analysis saved to Firestore!");
+      navigate("/result"); // ✅ Navigate only after saving
+    } else {
+      console.log("⚠ Duplicate resume upload — not saved.");
+      alert(
+        data.message ||
+          "Duplicate upload detected. XP not awarded for identical resume."
+      );
     }
-  };
+  } catch (error) {
+    console.error("Error:", error);
+    alert("Failed to connect to backend. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleLogout = async () => {
     try {
@@ -78,9 +97,10 @@ export default function HomePage({ setResult }) {
         padding: "20px",
       }}
     >
-      <h1 style={{ color: "#007bff" }}>AI Career Recommendation System</h1>
+      <h1 style={{ color: "#007bff" }}>AI Career Recommendation System 🎯</h1>
       <p style={{ marginBottom: "20px" }}>
         Upload your resume (PDF) to get a personalized career recommendation
+        and earn XP badges!
       </p>
 
       <input
